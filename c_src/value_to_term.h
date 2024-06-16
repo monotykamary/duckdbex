@@ -6,5 +6,6 @@ namespace duckdb {
 }
 
 namespace nif {
+  bool array_value_to_term(ErlNifEnv* env, const duckdb::Value& value, ERL_NIF_TERM& sink);
   bool value_to_term(ErlNifEnv* env, const duckdb::Value& value, ERL_NIF_TERM& sink);
 }

@@ -590,11 +590,48 @@ bool nif::term_to_struct(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::Logica
   return true;
 }
 
+bool nif::term_to_array(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::LogicalType& array_type, duckdb::Value& sink) {
+  duckdb::LogicalType child_type = duckdb::ListType::GetChildType(array_type);
+
+  unsigned list_length = 0;
+  if (!enif_get_list_length(env, term, &list_length))
+    return false;
+
+  if (list_length == 0) {
+    sink = move(duckdb::Value::EMPTYLIST(child_type));
+    return true;
+  }
+
+  duckdb::vector<duckdb::Value> values;
+
+  ERL_NIF_TERM list = term;
+  for (size_t i = 0; i < list_length; i++) {
+    ERL_NIF_TERM head, tail;
+    if (!enif_get_list_cell(env, list, &head, &tail))
+      return false;
+
+    duckdb::Value child;
+    if (!nif::term_to_value(env, head, child_type, child))
+      return false;
+
+    values.push_back(move(child));
+
+    list = tail;
+  }
+
+  sink = move(duckdb::Value::LIST(child_type, values));
+
+  return true;
+}
+
 bool nif::term_to_value(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::LogicalType& value_type, duckdb::Value& sink) {
   if(term_to_null(env, term, sink))
     return true;
 
   switch(value_type.id()) {
+    case duckdb::LogicalTypeId::ARRAY:
+      return term_to_array(env, term, value_type, sink);
+
     case duckdb::LogicalTypeId::SQLNULL:
       return term_to_null(env, term, sink);
 

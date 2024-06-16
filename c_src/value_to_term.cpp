@@ -3,6 +3,25 @@
 #include "term.h"
 #include <iostream>
 
+bool nif::array_value_to_term(ErlNifEnv* env, const duckdb::Value& value, ERL_NIF_TERM& sink) {
+  auto& array_values = duckdb::ListValue::GetChildren(value);
+  std::vector<ERL_NIF_TERM> term_array(array_values.size());
+
+  for (size_t i = 0; i < array_values.size(); i++) {
+    ERL_NIF_TERM val_term;
+    if (!value_to_term(env, array_values[i], val_term))
+      return false;
+    term_array[i] = val_term;
+  }
+
+  if (term_array.size() > 0)
+    sink = enif_make_list_from_array(env, &term_array[0], term_array.size());
+  else
+    sink = enif_make_list(env, 0);
+
+  return true;
+}
+
 bool nif::value_to_term(ErlNifEnv* env, const duckdb::Value& value, ERL_NIF_TERM& sink) {
   auto type = value.type();
 
@@ -12,6 +31,9 @@ bool nif::value_to_term(ErlNifEnv* env, const duckdb::Value& value, ERL_NIF_TERM
   }
 
   switch(type.id()) {
+    case duckdb::LogicalTypeId::ARRAY: {
+      return array_value_to_term(env, value, sink);
+    }
     case duckdb::LogicalTypeId::BIGINT: {
         auto bigint = value.GetValueUnsafe<int64_t>();
         sink = enif_make_int64(env, bigint);
