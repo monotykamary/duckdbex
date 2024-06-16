@@ -32,6 +32,7 @@ namespace nif {
   bool term_to_list(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::LogicalType& child_type, duckdb::Value& sink);
   bool term_to_map(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::LogicalType& map_type, duckdb::Value& sink);
   bool term_to_struct(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::LogicalType& struct_type, duckdb::Value& sink);
-
+  bool term_to_array(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::LogicalType& array_type, duckdb::Value& sink);
+  
   bool term_to_value(ErlNifEnv* env, ERL_NIF_TERM term, const duckdb::LogicalType& value_type, duckdb::Value& sink);
 }
